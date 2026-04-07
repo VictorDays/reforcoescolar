@@ -5,15 +5,19 @@ import '../modelos/professor.dart';
 class ProfessorCard extends StatelessWidget {
   final Professor professor;
   final VoidCallback? onTap;
-  final VoidCallback? onDelete;
-  final VoidCallback? onToggleAtivo;
+  final VoidCallback? onFavoritoTap;
+  final VoidCallback? onDelete;  // Adicionado
+  final VoidCallback? onToggleAtivo;  // Adicionado
+  final bool isFavorito;
 
   const ProfessorCard({
     super.key,
     required this.professor,
     this.onTap,
-    this.onDelete,
-    this.onToggleAtivo,
+    this.onFavoritoTap,
+    this.onDelete,  // Adicionado
+    this.onToggleAtivo,  // Adicionado
+    this.isFavorito = false,
   });
 
   @override
@@ -31,18 +35,21 @@ class ProfessorCard extends StatelessWidget {
           padding: const EdgeInsets.all(12),
           child: Row(
             children: [
+              // Avatar com status ativo/inativo
               CircleAvatar(
-                radius: 35,
+                radius: 30,
                 backgroundColor: professor.ativo 
-                    ? Colors.green.shade100 
+                    ? Colors.blue.shade100 
                     : Colors.grey.shade200,
                 child: Icon(
-                  Icons.person,
-                  size: 35,
-                  color: professor.ativo ? Colors.green : Colors.grey,
+                  Icons.person, 
+                  size: 30, 
+                  color: professor.ativo ? Colors.blue : Colors.grey,
                 ),
               ),
               const SizedBox(width: 12),
+              
+              // Informações do professor
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -64,6 +71,7 @@ class ProfessorCard extends StatelessWidget {
                             ),
                           ),
                         ),
+                        // Switch para ativar/desativar (admin)
                         if (onToggleAtivo != null)
                           Switch(
                             value: professor.ativo,
@@ -104,6 +112,18 @@ class ProfessorCard extends StatelessWidget {
                   ],
                 ),
               ),
+              
+              // Botão de favorito (para alunos)
+              if (onFavoritoTap != null)
+                IconButton(
+                  onPressed: onFavoritoTap,
+                  icon: Icon(
+                    isFavorito ? Icons.favorite : Icons.favorite_border,
+                    color: isFavorito ? Colors.red : Colors.grey,
+                  ),
+                ),
+              
+              // Botão de deletar (para admin)
               if (onDelete != null)
                 IconButton(
                   onPressed: onDelete,

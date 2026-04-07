@@ -1,4 +1,4 @@
-// lib/screens/crud_professores_screen.dart
+
 import 'package:flutter/material.dart';
 import '../database/db_helper.dart';
 import '../modelos/professor.dart';
