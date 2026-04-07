@@ -1,4 +1,4 @@
-// lib/widgets/professor_card.dart
+import 'dart:io';
 import 'package:flutter/material.dart';
 import '../modelos/professor.dart';
 
@@ -6,8 +6,8 @@ class ProfessorCard extends StatelessWidget {
   final Professor professor;
   final VoidCallback? onTap;
   final VoidCallback? onFavoritoTap;
-  final VoidCallback? onDelete;  // Adicionado
-  final VoidCallback? onToggleAtivo;  // Adicionado
+  final VoidCallback? onDelete;
+  final VoidCallback? onToggleAtivo;
   final bool isFavorito;
 
   const ProfessorCard({
@@ -15,8 +15,8 @@ class ProfessorCard extends StatelessWidget {
     required this.professor,
     this.onTap,
     this.onFavoritoTap,
-    this.onDelete,  // Adicionado
-    this.onToggleAtivo,  // Adicionado
+    this.onDelete,
+    this.onToggleAtivo,
     this.isFavorito = false,
   });
 
@@ -35,21 +35,11 @@ class ProfessorCard extends StatelessWidget {
           padding: const EdgeInsets.all(12),
           child: Row(
             children: [
-              // Avatar com status ativo/inativo
-              CircleAvatar(
-                radius: 30,
-                backgroundColor: professor.ativo 
-                    ? Colors.blue.shade100 
-                    : Colors.grey.shade200,
-                child: Icon(
-                  Icons.person, 
-                  size: 30, 
-                  color: professor.ativo ? Colors.blue : Colors.grey,
-                ),
-              ),
+              // Avatar com foto
+              _buildAvatar(),
               const SizedBox(width: 12),
               
-              // Informações do professor
+              // Informações
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -71,7 +61,6 @@ class ProfessorCard extends StatelessWidget {
                             ),
                           ),
                         ),
-                        // Switch para ativar/desativar (admin)
                         if (onToggleAtivo != null)
                           Switch(
                             value: professor.ativo,
@@ -113,7 +102,7 @@ class ProfessorCard extends StatelessWidget {
                 ),
               ),
               
-              // Botão de favorito (para alunos)
+              // Botão de favorito
               if (onFavoritoTap != null)
                 IconButton(
                   onPressed: onFavoritoTap,
@@ -123,7 +112,7 @@ class ProfessorCard extends StatelessWidget {
                   ),
                 ),
               
-              // Botão de deletar (para admin)
+              // Botão de deletar
               if (onDelete != null)
                 IconButton(
                   onPressed: onDelete,
@@ -133,6 +122,39 @@ class ProfessorCard extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildAvatar() {
+    // Se tem foto, mostra a foto
+    if (professor.foto != null && professor.foto!.isNotEmpty) {
+      return CircleAvatar(
+        radius: 30,
+        backgroundImage: FileImage(File(professor.foto!)),
+        onBackgroundImageError: (_, __) {
+          // Se erro ao carregar, mostra fallback
+        },
+        child: Container(
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.black.withOpacity(0.3),
+          ),
+          child: const Icon(Icons.person, color: Colors.white),
+        ),
+      );
+    }
+    
+    // Fallback: mostra ícone
+    return CircleAvatar(
+      radius: 30,
+      backgroundColor: professor.ativo 
+          ? Colors.blue.shade100 
+          : Colors.grey.shade200,
+      child: Icon(
+        Icons.person, 
+        size: 30, 
+        color: professor.ativo ? Colors.blue : Colors.grey,
       ),
     );
   }

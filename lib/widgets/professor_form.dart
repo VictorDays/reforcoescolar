@@ -1,7 +1,8 @@
-// lib/widgets/professor_form.dart
+
 import 'package:flutter/material.dart';
 import '../modelos/professor.dart';
 import '../modelos/disciplina.dart';
+import 'image_picker_widget.dart';
 
 class ProfessorForm extends StatefulWidget {
   final Professor? professor;
@@ -25,7 +26,7 @@ class _ProfessorFormState extends State<ProfessorForm> {
   final _contatoController = TextEditingController();
   
   String? _disciplinaSelecionada;
-  String? _foto;
+  String? _fotoPath;
 
   @override
   void initState() {
@@ -36,7 +37,7 @@ class _ProfessorFormState extends State<ProfessorForm> {
       _valorController.text = widget.professor!.valor.toString();
       _descricaoController.text = widget.professor!.descricao;
       _contatoController.text = widget.professor!.contato;
-      _foto = widget.professor!.foto;
+      _fotoPath = widget.professor!.foto;
     }
   }
 
@@ -61,6 +62,18 @@ class _ProfessorFormState extends State<ProfessorForm> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              // Seletor de foto
+              ImagePickerWidget(
+                currentImagePath: _fotoPath,
+                onImageSelected: (path) {
+                  setState(() {
+                    _fotoPath = path;
+                  });
+                },
+              ),
+              const SizedBox(height: 16),
+              
+              // Nome
               TextFormField(
                 controller: _nomeController,
                 decoration: const InputDecoration(
@@ -75,6 +88,8 @@ class _ProfessorFormState extends State<ProfessorForm> {
                 },
               ),
               const SizedBox(height: 12),
+              
+              // Disciplina
               DropdownButtonFormField<String>(
                 value: _disciplinaSelecionada,
                 decoration: const InputDecoration(
@@ -100,11 +115,13 @@ class _ProfessorFormState extends State<ProfessorForm> {
                 },
               ),
               const SizedBox(height: 12),
+              
+              // Valor
               TextFormField(
                 controller: _valorController,
                 keyboardType: TextInputType.number,
                 decoration: const InputDecoration(
-                  labelText: 'Valor por hora (R) *',
+                  labelText: 'Valor por hora (RS) *',
                   border: OutlineInputBorder(),
                   prefixText: 'R\$ ',
                 ),
@@ -119,6 +136,8 @@ class _ProfessorFormState extends State<ProfessorForm> {
                 },
               ),
               const SizedBox(height: 12),
+              
+              // Contato
               TextFormField(
                 controller: _contatoController,
                 keyboardType: TextInputType.phone,
@@ -135,6 +154,8 @@ class _ProfessorFormState extends State<ProfessorForm> {
                 },
               ),
               const SizedBox(height: 12),
+              
+              // Descrição
               TextFormField(
                 controller: _descricaoController,
                 maxLines: 3,
@@ -174,7 +195,7 @@ class _ProfessorFormState extends State<ProfessorForm> {
         valor: double.parse(_valorController.text),
         descricao: _descricaoController.text,
         contato: _contatoController.text,
-        foto: _foto,
+        foto: _fotoPath,
         ativo: widget.professor?.ativo ?? true,
       );
       Navigator.pop(context, professor);

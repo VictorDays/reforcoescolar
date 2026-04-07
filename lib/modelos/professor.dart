@@ -1,4 +1,4 @@
-// lib/models/professor.dart
+// lib/modelos/professor.dart
 class Professor {
   final int? id;
   final String nome;
@@ -6,7 +6,7 @@ class Professor {
   final double valor;
   final String descricao;
   final String contato;
-  final String? foto; // Mantém como String? para permitir null
+  final String? foto;  // caminho da foto ou base64
   final bool ativo;
 
   Professor({
@@ -16,7 +16,7 @@ class Professor {
     required this.valor,
     required this.descricao,
     required this.contato,
-    this.foto, // Pode ser null
+    this.foto,
     this.ativo = true,
   });
 
@@ -27,7 +27,7 @@ class Professor {
     'valor': valor,
     'descricao': descricao,
     'contato': contato,
-    'foto': foto, // Pode ser null, SQLite aceita
+    'foto': foto,
     'ativo': ativo ? 1 : 0,
   };
 
@@ -38,29 +38,7 @@ class Professor {
     valor: map['valor'],
     descricao: map['descricao'],
     contato: map['contato'],
-    foto: map['foto'], // Pode ser null do banco
+    foto: map['foto'],
     ativo: map['ativo'] == 1,
   );
-
-  Professor copyWith({
-    int? id,
-    String? nome,
-    String? disciplina,
-    double? valor,
-    String? descricao,
-    String? contato,
-    String? foto,
-    bool? ativo,
-  }) {
-    return Professor(
-      id: id ?? this.id,
-      nome: nome ?? this.nome,
-      disciplina: disciplina ?? this.disciplina,
-      valor: valor ?? this.valor,
-      descricao: descricao ?? this.descricao,
-      contato: contato ?? this.contato,
-      foto: foto ?? this.foto,
-      ativo: ativo ?? this.ativo,
-    );
-  }
 }
