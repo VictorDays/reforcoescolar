@@ -126,25 +126,28 @@ class ProfessorCard extends StatelessWidget {
     );
   }
 
+  
   Widget _buildAvatar() {
-    // Se tem foto, mostra a foto
-    if (professor.foto != null && professor.foto!.isNotEmpty) {
-      return CircleAvatar(
-        radius: 30,
-        backgroundImage: FileImage(File(professor.foto!)),
-        onBackgroundImageError: (_, __) {
-          // Se erro ao carregar, mostra fallback
-        },
-        child: Container(
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: Colors.black.withOpacity(0.3),
-          ),
-          child: const Icon(Icons.person, color: Colors.white),
-        ),
-      );
-    }
+    // Verifica se tem foto válida
+    final hasFoto = professor.foto != null && professor.foto!.isNotEmpty;
     
+    if (hasFoto) {
+      // Tenta carregar a foto
+      try {
+        final file = File(professor.foto!);
+        if (file.existsSync()) {
+          return CircleAvatar(
+            radius: 30,
+            backgroundImage: FileImage(file),
+            onBackgroundImageError: (_, __) {
+              // Se erro ao carregar, mostra fallback
+            },
+          );
+        }
+      } catch (e) {
+        // Se erro, mostra fallback
+      }
+    }
     // Fallback: mostra ícone
     return CircleAvatar(
       radius: 30,
