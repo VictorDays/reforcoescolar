@@ -1,4 +1,3 @@
-// lib/widgets/custom_dialog.dart
 import 'package:flutter/material.dart';
 
 class CustomDialog extends StatelessWidget {

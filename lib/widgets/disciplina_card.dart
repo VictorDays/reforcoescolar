@@ -1,4 +1,4 @@
-// lib/widgets/disciplina_card.dart
+
 import 'package:flutter/material.dart';
 import '../modelos/disciplina.dart';
 

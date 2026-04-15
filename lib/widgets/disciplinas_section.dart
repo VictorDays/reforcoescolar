@@ -1,4 +1,3 @@
-// lib/widgets/disciplinas_section_widget.dart
 import 'package:flutter/material.dart';
 import '../modelos/disciplina.dart';
 

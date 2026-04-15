@@ -1,4 +1,4 @@
-// lib/widgets/custom_carousel.dart
+
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 
@@ -11,7 +11,7 @@ class CustomCarousel extends StatefulWidget {
     super.key,
     required this.items,
     this.height = 140,
-    this.autoPlayInterval = const Duration(seconds: 3),
+    this.autoPlayInterval = const Duration(seconds: 2),
   });
 
   @override
