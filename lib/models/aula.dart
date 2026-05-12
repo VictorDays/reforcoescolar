@@ -85,4 +85,40 @@ class Aula {
           : null,
     );
   }
+
+  /// Cópia com alterações
+Aula copyWith({
+  String? id,
+  String? solicitacaoId,
+  String? professorId,
+  String? alunoId,
+  String? disciplinaId,
+  DateTime? data,
+  TimeOfDay? horario,
+  int? duracao,
+  AulaStatus? status,
+  String? googleEventoId,
+  String? meetLink,
+  String? observacoes,
+  DateTime? createdAt,
+  DateTime? updatedAt,
+}) {
+  return Aula(
+    id: id ?? this.id,
+    solicitacaoId: solicitacaoId ?? this.solicitacaoId,
+    professorId: professorId ?? this.professorId,
+    alunoId: alunoId ?? this.alunoId,
+    disciplinaId: disciplinaId ?? this.disciplinaId,
+    data: data ?? this.data,
+    horario: horario ?? this.horario,
+    duracao: duracao ?? this.duracao,
+    status: status ?? this.status,
+    googleEventoId: googleEventoId ?? this.googleEventoId,
+    meetLink: meetLink ?? this.meetLink,
+    observacoes: observacoes ?? this.observacoes,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+}
+
 }
