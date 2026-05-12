@@ -1,8 +1,8 @@
-
 import 'dart:io';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'config/supabase_config.dart';
 import 'views/login_screen.dart';
 import 'views/home_screen.dart';
 import 'views/favoritos_screen.dart';
@@ -12,17 +12,23 @@ import 'models/usuario.dart';
 import 'widgets/bottom_nav_bar.dart';
 
 void main() async {
-  await Supabase.initialize(
-  url: 'https://cmgyxcaiifiqysvlqums.supabase.co/rest/v1/',  
-  anonKey: 'sb_publishable_oZZi15FFGxxFpd9CxF2pjA_jqSiJ1ej',     
-);
-
+  // Inicializar WidgetsFlutterBinding PRIMEIRO
   WidgetsFlutterBinding.ensureInitialized();
   
+  // Configuração para desktop (Windows/Linux)
   if (Platform.isWindows || Platform.isLinux) {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
   }
+  
+  // Inicializar Supabase usando a configuração central
+  await SupabaseConfig.initialize(
+    url: 'https://cmgyxcaiifiqysvlqums.supabase.co',
+    anonKey: 'sb_publishable_oZZi15FFGxxFpd9CxF2pjA_jqSiJ1ej',
+  );
+  
+  // Inicializar buckets de storage (opcional)
+  await SupabaseConfig.initBuckets();
   
   runApp(const MyApp());
 }
@@ -85,7 +91,7 @@ class _MainScreenState extends State<MainScreen> {
     // Telas que todos os usuários veem
     final telasComuns = [
       HomeScreen(usuario: widget.usuario),     
-      ExplorarScreen(usuario: widget.usuario ),                   
+      ExplorarScreen(usuario: widget.usuario),                   
       FavoritosScreen(usuario: widget.usuario), 
     ];
 
@@ -114,4 +120,3 @@ class _MainScreenState extends State<MainScreen> {
     );
   }
 }
-
