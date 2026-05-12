@@ -14,6 +14,7 @@ class AppConstants {
     'História',
     'Biologia',
     'Inglês',
+    'Python'
   ];
   
   static const List<Color> coresDisciplinas = [
@@ -24,6 +25,7 @@ class AppConstants {
     Colors.red,
     Colors.teal,
     Colors.indigo,
+    Colors.lightGreenAccent
   ];
   
   static IconData getIconForDisciplina(String disciplina) {

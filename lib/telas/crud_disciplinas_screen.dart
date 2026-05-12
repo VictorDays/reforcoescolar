@@ -1,4 +1,3 @@
-// lib/screens/crud_disciplinas_screen.dart
 import 'package:flutter/material.dart';
 import '../database/db_helper.dart';
 import '../modelos/disciplina.dart';
