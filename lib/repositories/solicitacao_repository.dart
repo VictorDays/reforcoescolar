@@ -41,49 +41,47 @@ class SolicitacaoRepository extends BaseRepository {
       return null;
     }
   }
-  
-  /// Listar solicitações recebidas por um professor
-  Future<List<Solicitacao>> listarPorProfessor(String professorId, {SolicitacaoStatus? status}) async {
-    try {
-      var query = supabase
-          .from('solicitacoes')
-          .select()
-          .eq('professor_id', professorId)
-          .order('created_at', ascending: false);
-      
-      if (status != null) {
-        query = query.eq('status', status.name);
-      }
-      
-      final response = await query;
-      return response.map((json) => Solicitacao.fromJson(json)).toList();
-    } catch (e) {
-      logError('listarPorProfessor', e);
-      return [];
+/// Listar solicitações recebidas por um professor
+Future<List<Solicitacao>> listarPorProfessor(String professorId, {SolicitacaoStatus? status}) async {
+  try {
+    // ✅ CORRIGIDO: aplicar filters PRIMEIRO
+    var query = supabase
+        .from('solicitacoes')
+        .select()
+        .eq('professor_id', professorId);
+    
+    if (status != null) {
+      query = query.eq('status', status.name);
     }
+    
+    final response = await query.order('created_at', ascending: false);
+    return response.map((json) => Solicitacao.fromJson(json)).toList();
+  } catch (e) {
+    logError('listarPorProfessor', e);
+    return [];
   }
-  
-  /// Listar solicitações feitas por um aluno
-  Future<List<Solicitacao>> listarPorAluno(String alunoId, {SolicitacaoStatus? status}) async {
-    try {
-      var query = supabase
-          .from('solicitacoes')
-          .select()
-          .eq('aluno_id', alunoId)
-          .order('created_at', ascending: false);
-      
-      if (status != null) {
-        query = query.eq('status', status.name);
-      }
-      
-      final response = await query;
-      return response.map((json) => Solicitacao.fromJson(json)).toList();
-    } catch (e) {
-      logError('listarPorAluno', e);
-      return [];
+}
+
+/// Listar solicitações feitas por um aluno
+Future<List<Solicitacao>> listarPorAluno(String alunoId, {SolicitacaoStatus? status}) async {
+  try {
+    // ✅ CORRIGIDO: aplicar filters PRIMEIRO
+    var query = supabase
+        .from('solicitacoes')
+        .select()
+        .eq('aluno_id', alunoId);
+    
+    if (status != null) {
+      query = query.eq('status', status.name);
     }
+    
+    final response = await query.order('created_at', ascending: false);
+    return response.map((json) => Solicitacao.fromJson(json)).toList();
+  } catch (e) {
+    logError('listarPorAluno', e);
+    return [];
   }
-  
+} 
   /// Listar solicitações pendentes para professor
   Future<List<Solicitacao>> listarPendentesPorProfessor(String professorId) async {
     return listarPorProfessor(professorId, status: SolicitacaoStatus.pendente);

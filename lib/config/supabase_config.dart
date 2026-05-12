@@ -1,48 +1,29 @@
+import 'dart:typed_data';
+import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Configuração central do Supabase
-/// 
-/// Esta classe gerencia a conexão com o Supabase e fornece
-/// acesso ao cliente para todos os repositories.
 class SupabaseConfig {
-  // Singleton
-  static final SupabaseConfig _instance = SupabaseConfig._internal();
-  factory SupabaseConfig() => _instance;
-  SupabaseConfig._internal();
-
-  // Cliente Supabase (acessado pelos repositories)
+  // Cliente Supabase
   static SupabaseClient get client => Supabase.instance.client;
   
-  // URLs e chaves (definidas no main.dart)
-  static String? _url;
-  static String? _anonKey;
-  
-  /// Inicializar Supabase (chamado no main.dart)
+  /// Inicializar Supabase
   static Future<void> initialize({
     required String url,
     required String anonKey,
   }) async {
-    _url = url;
-    _anonKey = anonKey;
-    
     await Supabase.initialize(
       url: url,
       anonKey: anonKey,
     );
-    
-    print('✅ SupabaseConfig: Conectado com sucesso!');
+    print('✅ SupabaseConfig: Conectado!');
   }
   
-  /// Verificar se está conectado
   static bool get isConnected => Supabase.instance.client.auth.currentSession != null;
   
-  /// Obter URL do projeto
-  static String? get url => _url;
-  
   // ============================================
-  // NOMES DAS TABELAS (centralizados)
+  // NOMES DAS TABELAS
   // ============================================
-  
   static const String tableUsuarios = 'usuarios';
   static const String tableDisciplinas = 'disciplinas';
   static const String tableAlunos = 'alunos';
@@ -54,43 +35,16 @@ class SupabaseConfig {
   static const String tableNotificacoes = 'notificacoes';
   
   // ============================================
-  // BUCKETS DO STORAGE
+  // BUCKETS DO STORAGE (já criados manualmente)
   // ============================================
-  
   static const String bucketAvatars = 'avatars';
   static const String bucketAulas = 'aulas';
   
-  /// Inicializar buckets de storage (executar uma vez)
-  static Future<void> initBuckets() async {
-    try {
-      // Verificar/criar bucket de avatars
-      final buckets = await client.storage.listBuckets();
-      
-      bool hasAvatars = buckets.any((b) => b.name == bucketAvatars);
-      if (!hasAvatars) {
-        await client.storage.createBucket(bucketAvatars, 
-          isPublic: true,
-        );
-        print('✅ Bucket "$bucketAvatars" criado');
-      }
-      
-      bool hasAulas = buckets.any((b) => b.name == bucketAulas);
-      if (!hasAulas) {
-        await client.storage.createBucket(bucketAulas,
-          isPublic: true,
-        );
-        print('✅ Bucket "$bucketAulas" criado');
-      }
-    } catch (e) {
-      print('⚠️ Erro ao criar buckets: $e');
-    }
-  }
-  
   // ============================================
-  // HELPERS
+  // HELPERS DE STORAGE
   // ============================================
   
-  /// Gerar URL pública para um arquivo no storage
+  /// Obter URL pública de um arquivo
   static String getPublicUrl(String bucket, String path) {
     return client.storage.from(bucket).getPublicUrl(path);
   }
@@ -99,16 +53,19 @@ class SupabaseConfig {
   static Future<String> uploadFile({
     required String bucket,
     required String path,
-    required List<int> bytes,
+    required Uint8List bytes,
     String? contentType,
   }) async {
+    final options = FileOptions(
+      contentType: contentType ?? 'application/octet-stream',
+    );
+    
     await client.storage.from(bucket).uploadBinary(
       path,
       bytes,
-      fileOptions: contentType != null 
-          ? FileOptions(contentType: contentType)
-          : null,
+      fileOptions: options,
     );
+    
     return getPublicUrl(bucket, path);
   }
   
@@ -118,5 +75,21 @@ class SupabaseConfig {
     required String path,
   }) async {
     await client.storage.from(bucket).remove([path]);
+  }
+  
+  // ============================================
+  // UTILITÁRIOS
+  // ============================================
+  
+  static String timeOfDayToString(TimeOfDay time) {
+    return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+  }
+  
+  static TimeOfDay stringToTimeOfDay(String time) {
+    final parts = time.split(':');
+    return TimeOfDay(
+      hour: int.parse(parts[0]),
+      minute: int.parse(parts[1]),
+    );
   }
 }

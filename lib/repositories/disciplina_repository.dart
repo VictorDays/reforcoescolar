@@ -5,26 +5,25 @@ import 'base_repository.dart';
 class DisciplinaRepository extends BaseRepository {
   
   /// Listar todas as disciplinas ativas
-  Future<List<Disciplina>> listarTodas({bool apenasAtivas = true}) async {
-    try {
-      var query = supabase
-          .from('disciplinas')
-          .select()
-          .order('nome');
-      
-      if (apenasAtivas) {
-        query = query.eq('ativa', true);
-      }
-      
-      final response = await query;
-      
-      return response.map((json) => Disciplina.fromJson(json)).toList();
-    } catch (e) {
-      logError('listarTodas', e);
-      return [];
+ Future<List<Disciplina>> listarTodas({bool apenasAtivas = true}) async {
+  try {
+    // ✅ CORRIGIDO: aplicar filtro ANTES do order
+    var query = supabase
+        .from('disciplinas')
+        .select();
+    
+    if (apenasAtivas) {
+      query = query.eq('ativa', true);
     }
+    
+    final response = await query.order('nome');
+    
+    return response.map((json) => Disciplina.fromJson(json)).toList();
+  } catch (e) {
+    logError('listarTodas', e);
+    return [];
   }
-  
+}
   /// Buscar disciplina por ID
   Future<Disciplina?> buscarPorId(String id) async {
     try {

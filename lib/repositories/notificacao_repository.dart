@@ -25,42 +25,45 @@ class NotificacaoRepository extends BaseRepository {
   }
   
   /// Buscar notificações de um usuário
-  Future<List<Notificacao>> listarPorUsuario(String usuarioId, {bool apenasNaoLidas = false}) async {
-    try {
-      var query = supabase
-          .from('notificacoes')
-          .select()
-          .eq('usuario_id', usuarioId)
-          .order('created_at', ascending: false);
-      
-      if (apenasNaoLidas) {
-        query = query.eq('lida', false);
-      }
-      
-      final response = await query;
-      return response.map((json) => Notificacao.fromJson(json)).toList();
-    } catch (e) {
-      logError('listarPorUsuario', e);
-      return [];
+Future<List<Notificacao>> listarPorUsuario(String usuarioId, {bool apenasNaoLidas = false}) async {
+  try {
+    // ✅ CORRIGIDO: aplicar filters PRIMEIRO, depois order
+    var query = supabase
+        .from('notificacoes')
+        .select()
+        .eq('usuario_id', usuarioId);
+    
+    if (apenasNaoLidas) {
+      query = query.eq('lida', false);
     }
+    
+    final response = await query.order('created_at', ascending: false);
+    return response.map((json) => Notificacao.fromJson(json)).toList();
+  } catch (e) {
+    logError('listarPorUsuario', e);
+    return [];
   }
+}
   
+
   /// Contar notificações não lidas
-  Future<int> contarNaoLidas(String usuarioId) async {
-    try {
-      final response = await supabase
-          .from('notificacoes')
-          .select('id', count: CountOption.exact)
-          .eq('usuario_id', usuarioId)
-          .eq('lida', false);
-      
-      return response.count ?? 0;
-    } catch (e) {
-      logError('contarNaoLidas', e);
-      return 0;
-    }
+Future<int> contarNaoLidas(String usuarioId) async {
+  try {
+    // ✅ CORRIGIDO: buscar apenas IDs e contar manualmente
+    final response = await supabase
+        .from('notificacoes')
+        .select('id')
+        .eq('usuario_id', usuarioId)
+        .eq('lida', false);
+    
+    return response.length;
+  } catch (e) {
+    logError('contarNaoLidas', e);
+    return 0;
   }
+}
   
+
   /// Marcar notificação como lida
   Future<void> marcarComoLida(String notificacaoId) async {
     try {

@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/aula.dart';
 import 'base_repository.dart';
@@ -27,6 +28,7 @@ class AulaRepository extends BaseRepository {
   /// Buscar aula por ID
   Future<Aula?> buscarPorId(String id) async {
     try {
+      // ✅ CORRIGIDO: select() primeiro, depois eq()
       final response = await supabase
           .from('aulas')
           .select()
@@ -45,18 +47,20 @@ class AulaRepository extends BaseRepository {
   /// Listar aulas de um professor
   Future<List<Aula>> listarPorProfessor(String professorId, {AulaStatus? status}) async {
     try {
+      // ✅ CORRIGIDO: select() primeiro, depois filters
       var query = supabase
           .from('aulas')
           .select()
-          .eq('professor_id', professorId)
-          .order('data', ascending: true)
-          .order('horario', ascending: true);
+          .eq('professor_id', professorId);
       
       if (status != null) {
         query = query.eq('status', status.name);
       }
       
-      final response = await query;
+      final response = await query
+          .order('data', ascending: true)
+          .order('horario', ascending: true);
+      
       return response.map((json) => Aula.fromJson(json)).toList();
     } catch (e) {
       logError('listarPorProfessor', e);
@@ -67,18 +71,20 @@ class AulaRepository extends BaseRepository {
   /// Listar aulas de um aluno
   Future<List<Aula>> listarPorAluno(String alunoId, {AulaStatus? status}) async {
     try {
+      // ✅ CORRIGIDO: select() primeiro, depois filters
       var query = supabase
           .from('aulas')
           .select()
-          .eq('aluno_id', alunoId)
-          .order('data', ascending: true)
-          .order('horario', ascending: true);
+          .eq('aluno_id', alunoId);
       
       if (status != null) {
         query = query.eq('status', status.name);
       }
       
-      final response = await query;
+      final response = await query
+          .order('data', ascending: true)
+          .order('horario', ascending: true);
+      
       return response.map((json) => Aula.fromJson(json)).toList();
     } catch (e) {
       logError('listarPorAluno', e);
@@ -92,6 +98,7 @@ class AulaRepository extends BaseRepository {
       final hoje = DateTime.now().toIso8601String().split('T')[0];
       final campoId = tipo == 'professor' ? 'professor_id' : 'aluno_id';
       
+      // ✅ CORRIGIDO: select() primeiro, depois filters
       final response = await supabase
           .from('aulas')
           .select()
@@ -190,13 +197,8 @@ class AulaRepository extends BaseRepository {
   Future<bool> verificarConflito(String professorId, DateTime data, TimeOfDay horario, int duracao) async {
     try {
       final dataStr = data.toIso8601String().split('T')[0];
-      final horarioStr = '${horario.hour.toString().padLeft(2, '0')}:${horario.minute.toString().padLeft(2, '0')}';
       
-      final inicioStr = horarioStr;
-      final fim = DateTime(data.year, data.month, data.day, horario.hour, horario.minute).add(Duration(minutes: duracao));
-      final fimStr = '${fim.hour.toString().padLeft(2, '0')}:${fim.minute.toString().padLeft(2, '0')}';
-      
-      // Buscar aulas no mesmo dia
+      // ✅ CORRIGIDO: select() primeiro, depois filters
       final aulas = await supabase
           .from('aulas')
           .select()
@@ -204,15 +206,19 @@ class AulaRepository extends BaseRepository {
           .eq('data', dataStr)
           .neq('status', 'cancelada');
       
+      final inicioMinutos = horario.hour * 60 + horario.minute;
+      final fimMinutos = inicioMinutos + duracao;
+      
       for (var aula in aulas) {
         final aulaHorario = aula['horario'] as String;
         final aulaDuracao = aula['duracao'] as int? ?? 60;
         
-        final aulaInicio = aulaHorario;
-        final aulaFim = _calcularFim(aulaHorario, aulaDuracao);
+        final aulaParts = aulaHorario.split(':');
+        final aulaInicioMinutos = int.parse(aulaParts[0]) * 60 + int.parse(aulaParts[1]);
+        final aulaFimMinutos = aulaInicioMinutos + aulaDuracao;
         
         // Verificar sobreposição
-        if (_temConflito(inicioStr, fimStr, aulaInicio, aulaFim)) {
+        if (inicioMinutos < aulaFimMinutos && fimMinutos > aulaInicioMinutos) {
           return true; // Tem conflito
         }
       }
@@ -220,20 +226,7 @@ class AulaRepository extends BaseRepository {
       return false; // Sem conflito
     } catch (e) {
       logError('verificarConflito', e);
-      return true; // Por segurança, considerar conflito em caso de erro
+      return true;
     }
-  }
-  
-  String _calcularFim(String horario, int duracao) {
-    final partes = horario.split(':');
-    final hora = int.parse(partes[0]);
-    final minuto = int.parse(partes[1]);
-    
-    final fim = DateTime(2024, 1, 1, hora, minuto).add(Duration(minutes: duracao));
-    return '${fim.hour.toString().padLeft(2, '0')}:${fim.minute.toString().padLeft(2, '0')}';
-  }
-  
-  bool _temConflito(String inicio1, String fim1, String inicio2, String fim2) {
-    return inicio1.compareTo(fim2) < 0 && fim1.compareTo(inicio2) > 0;
   }
 }

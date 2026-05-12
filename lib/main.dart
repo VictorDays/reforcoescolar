@@ -27,8 +27,6 @@ void main() async {
     anonKey: 'sb_publishable_oZZi15FFGxxFpd9CxF2pjA_jqSiJ1ej',
   );
   
-  // Inicializar buckets de storage (opcional)
-  await SupabaseConfig.initBuckets();
   
   runApp(const MyApp());
 }

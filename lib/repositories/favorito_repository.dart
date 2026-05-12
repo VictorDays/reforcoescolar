@@ -98,17 +98,18 @@ class FavoritoRepository extends BaseRepository {
   }
   
   /// Contar quantos favoritos um professor tem
-  Future<int> contarFavoritosDoProfessor(String professorId) async {
-    try {
-      final response = await supabase
-          .from('favoritos')
-          .select('id', count: CountOption.exact)
-          .eq('professor_id', professorId);
-      
-      return response.count ?? 0;
-    } catch (e) {
-      logError('contarFavoritosDoProfessor', e);
-      return 0;
-    }
+Future<int> contarFavoritosDoProfessor(String professorId) async {
+  try {
+    final response = await supabase
+        .from('favoritos')
+        .select('id')
+        .eq('professor_id', professorId);
+    
+    // ✅ Contar manualmente pelo tamanho da lista
+    return response.length;
+  } catch (e) {
+    logError('contarFavoritosDoProfessor', e);
+    return 0;
   }
+}
 }
