@@ -5,8 +5,40 @@ enum AulaStatus {
   confirmada,
   concluida,
   cancelada,
-  remarcada,
+  remarcada;
+
+  // ✅ ADICIONE ESTES GETTERS
+  String get displayName {
+    switch (this) {
+      case AulaStatus.agendada:
+        return 'Agendada';
+      case AulaStatus.confirmada:
+        return 'Confirmada';
+      case AulaStatus.concluida:
+        return 'Concluída';
+      case AulaStatus.cancelada:
+        return 'Cancelada';
+      case AulaStatus.remarcada:
+        return 'Remarcada';
+    }
+  }
+  
+  Color get color {
+    switch (this) {
+      case AulaStatus.agendada:
+        return Colors.orange;
+      case AulaStatus.confirmada:
+        return Colors.green;
+      case AulaStatus.concluida:
+        return Colors.blue;
+      case AulaStatus.cancelada:
+        return Colors.red;
+      case AulaStatus.remarcada:
+        return Colors.purple;
+    }
+  }
 }
+
 
 class Aula {
   final String id;
@@ -120,5 +152,38 @@ Aula copyWith({
     updatedAt: updatedAt ?? this.updatedAt,
   );
 }
+/// Data formatada (ex: Hoje, Amanhã, 15/05)
+  String get dataFormatada {
+    final hoje = DateTime.now();
+    final diff = DateTime(data.year, data.month, data.day)
+        .difference(DateTime(hoje.year, hoje.month, hoje.day))
+        .inDays;
+    
+    if (diff == 0) return 'Hoje';
+    if (diff == 1) return 'Amanhã';
+    return '${data.day}/${data.month}';
+  }
+  
+  /// Horário formatado (ex: 14:30)
+  String get horarioFormatado {
+    return '${horario.hour.toString().padLeft(2, '0')}:${horario.minute.toString().padLeft(2, '0')}';
+  }
+  
+  /// Data e hora completa
+  DateTime get dataHoraCompleta {
+    return DateTime(
+      data.year,
+      data.month,
+      data.day,
+      horario.hour,
+      horario.minute,
+    );
+  }
+  
+  /// Hora de fim da aula
+  DateTime get horaFim {
+    return dataHoraCompleta.add(Duration(minutes: duracao));
+  }
 
+  
 }

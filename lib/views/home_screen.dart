@@ -1,32 +1,24 @@
- 
 import 'package:flutter/material.dart';
-import 'package:reforcoescolar/views/login_screen.dart';
-import '../widgets/disciplinas_section.dart';
-import '../widgets/custom_carousel.dart'; 
-import '../widgets/professores_destaque.dart';
-import '../widgets/professor_card.dart';
-import '../database/db_helper.dart';
-import '../models/disciplina.dart';
-import '../models/professor.dart';
+import 'package:provider/provider.dart';
+import 'package:reforcoescolar/models/solicitacao.dart';
+import '../controllers/auth_controller.dart';
+import '../controllers/agendamento_controller.dart';
 import '../models/usuario.dart';
-import '../main.dart';
+import '../models/aula.dart';
 
 class HomeScreen extends StatefulWidget {
   final Usuario usuario;
 
-  const HomeScreen({super.key, required this.usuario});
+  const HomeScreen({
+    super.key,
+    required this.usuario,
+  });
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  List<Disciplina> _disciplinas = [];
-  List<Professor> _professores = [];
-  Set<int> _favoritos = {};
-  bool _isLoadingDisciplinas = true;
-  bool _isLoadingProfessores = true;
-
   @override
   void initState() {
     super.initState();
@@ -34,100 +26,157 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _carregarDados() async {
-    setState(() {
-      _isLoadingDisciplinas = true;
-      _isLoadingProfessores = true;
-    });
-    
-    final disciplinas = await DBHelper.getAllDisciplinas();
-    final professores = await DBHelper.getAllProfessores();
+    final agendamentoController = context.read<AgendamentoController>();
     
     if (widget.usuario.tipo == TipoUsuario.aluno) {
-      final favoritosList = await DBHelper.getFavoritosByUsuario(widget.usuario.id!);
-      setState(() {
-        _favoritos = favoritosList.map((p) => p.id!).toSet();
-      });
-    }
-    
-    setState(() {
-      _disciplinas = disciplinas;
-      _professores = professores;
-      _isLoadingDisciplinas = false;
-      _isLoadingProfessores = false;
-    });
-  }
-
-  Future<void> _toggleFavorito(Professor professor) async {
-    if (widget.usuario.tipo != TipoUsuario.aluno) return;
-    
-    final isFav = _favoritos.contains(professor.id);
-    
-    if (isFav) {
-      await DBHelper.removeFavorito(widget.usuario.id!, professor.id!);
-      setState(() {
-        _favoritos.remove(professor.id);
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${professor.nome} removido dos favoritos'), backgroundColor: Colors.orange),
+      await agendamentoController.carregarProximasAulas(
+        widget.usuario.id,
+        'aluno',
       );
-    } else {
-      await DBHelper.addFavorito(widget.usuario.id!, professor.id!);
-      setState(() {
-        _favoritos.add(professor.id!);
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${professor.nome} adicionado aos favoritos'), backgroundColor: Colors.green),
+    } else if (widget.usuario.tipo == TipoUsuario.professor) {
+      await agendamentoController.carregarProximasAulas(
+        widget.usuario.id,
+        'professor',
       );
-    }
-  }
-
-  Future<void> _logout() async {
-    await DBHelper.logout(widget.usuario.id!);
-    if (mounted) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const LoginScreen()),
+      await agendamentoController.carregarSolicitacoesPendentes(
+        widget.usuario.id,
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Reforço Escolar'),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.exit_to_app),
-            onPressed: _logout,
-            tooltip: 'Sair',
-          ),
-        ],
-      ),
-      body: RefreshIndicator(
-        onRefresh: _carregarDados,
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeader(),
-              const SizedBox(height: 24),
-              _buildCarousel(),
-              const SizedBox(height: 32),
-              DisciplinasSectionWidget(
-                disciplinas: _disciplinas,
-                isLoading: _isLoadingDisciplinas,
-                onViewAll: () {},
-                onDisciplinaTap: (disciplina) {
-                  _showProfessoresPorDisciplina(disciplina);
-                },
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AgendamentoController()),
+      ],
+      child: Scaffold(
+        body: RefreshIndicator(
+          onRefresh: _carregarDados,
+          child: CustomScrollView(
+            slivers: [
+              // App Bar
+              SliverAppBar(
+                expandedHeight: 120,
+                floating: true,
+                pinned: true,
+                flexibleSpace: FlexibleSpaceBar(
+                  title: Text(
+                    'Olá, ${widget.usuario.nome.split(' ').first}',
+                    style: const TextStyle(fontSize: 18),
+                  ),
+                  centerTitle: true,
+                  background: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Colors.blue.shade700,
+                          Colors.blue.shade300,
+                        ],
+                      ),
+                    ),
+                    child: const Center(
+                      child: Icon(
+                        Icons.school,
+                        size: 50,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
               ),
-              const SizedBox(height: 32),
-              _buildProfessoresSection(),
-              const SizedBox(height: 24),
+              
+              // Conteúdo
+              SliverPadding(
+                padding: const EdgeInsets.all(16),
+                sliver: Consumer<AgendamentoController>(
+                  builder: (context, agendamentoController, child) {
+                    if (agendamentoController.isLoading) {
+                      return const SliverToBoxAdapter(
+                        child: Center(
+                          child: Padding(
+                            padding: EdgeInsets.all(32),
+                            child: CircularProgressIndicator(),
+                          ),
+                        ),
+                      );
+                    }
+                    
+                    return SliverList(
+                      delegate: SliverChildListDelegate([
+                        // Card de boas-vindas
+                        Card(
+                          elevation: 2,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    CircleAvatar(
+                                      radius: 25,
+                                      backgroundColor: Colors.blue.shade100,
+                                      child: Icon(
+                                        widget.usuario.tipo == TipoUsuario.aluno
+                                            ? Icons.person
+                                            : Icons.school,
+                                        size: 30,
+                                        color: Colors.blue.shade700,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            widget.usuario.nome,
+                                            style: const TextStyle(
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          Text(
+                                            widget.usuario.tipo == TipoUsuario.aluno
+                                                ? 'Aluno'
+                                                : widget.usuario.tipo == TipoUsuario.professor
+                                                    ? 'Professor'
+                                                    : 'Administrador',
+                                            style: TextStyle(
+                                              color: Colors.grey.shade600,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        
+                        const SizedBox(height: 16),
+                        
+                        // Próximas Aulas
+                        _buildProximasAulas(agendamentoController),
+                        
+                        const SizedBox(height: 16),
+                        
+                        // Solicitações Pendentes (apenas professor)
+                        if (widget.usuario.tipo == TipoUsuario.professor)
+                          _buildSolicitacoesPendentes(agendamentoController),
+                      ]),
+                    );
+                  },
+                ),
+              ),
             ],
           ),
         ),
@@ -135,141 +184,189 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildHeader() {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.blue.shade700, Colors.blue.shade400],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(30),
-          bottomRight: Radius.circular(30),
+  Widget _buildProximasAulas(AgendamentoController controller) {
+    final aulas = controller.aulas;
+    
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.calendar_today, color: Colors.blue.shade700),
+                const SizedBox(width: 8),
+                const Text(
+                  'Próximas Aulas',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            if (aulas.isEmpty)
+              const Padding(
+                padding: EdgeInsets.all(16),
+                child: Center(
+                  child: Text('Nenhuma aula agendada'),
+                ),
+              )
+            else
+              ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: aulas.length > 5 ? 5 : aulas.length,
+                separatorBuilder: (_, __) => const Divider(),
+                itemBuilder: (context, index) {
+                  final aula = aulas[index];
+                  return _buildAulaTile(aula);
+                },
+              ),
+            if (aulas.length > 5)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: TextButton(
+                  onPressed: () {
+                    // TODO: Navegar para tela de todas as aulas
+                  },
+                  child: Text('Ver todas (${aulas.length})'),
+                ),
+              ),
+          ],
         ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Reforço Escolar',
-            style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white),
+    );
+  }
+
+  Widget _buildAulaTile(Aula aula) {
+    return ListTile(
+      leading: CircleAvatar(
+        backgroundColor: aula.status.color.withOpacity(0.2),
+        child: Icon(
+          Icons.school,
+          color: aula.status.color,
+          size: 20,
+        ),
+      ),
+      title: Text(
+        widget.usuario.tipo == TipoUsuario.aluno
+            ? 'Aula com Professor'
+            : 'Aula com Aluno',
+        style: const TextStyle(fontWeight: FontWeight.w500),
+      ),
+      subtitle: Text(
+        '${aula.dataFormatada} • ${aula.horarioFormatado}h',
+      ),
+      trailing: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: aula.status.color.withOpacity(0.2),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Text(
+          aula.status.displayName,
+          style: TextStyle(
+            color: aula.status.color,
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
           ),
-          const SizedBox(height: 8),
-          Text(
-            'Olá, ${widget.usuario.nome}!',
-            style: TextStyle(fontSize: 16, color: Colors.white.withOpacity(0.9)),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            widget.usuario.tipo == TipoUsuario.admin ? 'Modo Administrador' : 'Encontre o professor perfeito para você',
-            style: TextStyle(fontSize: 14, color: Colors.white.withOpacity(0.7)),
-          ),
-        ],
+        ),
       ),
     );
   }
 
-Widget _buildCarousel() {
-  final carouselItems = [
-    CarouselItem(
-      title: '🎓 Aulas Particulares',
-      subtitle: 'Aprenda no seu ritmo com professores qualificados',
-      color: Colors.orange.shade400,
-      icon: Icons.school,
-      onTap: () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Aulas particulares'), duration: Duration(seconds: 1)),
-        );
-      },
-    ),
-    CarouselItem(
-      title: '📚 Todas as Disciplinas',
-      subtitle: 'Do fundamental ao vestibular, temos o professor ideal',
-      color: Colors.green.shade400,
-      icon: Icons.menu_book,
-      onTap: () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Todas as disciplinas'), duration: Duration(seconds: 1)),
-        );
-      },
-    ),
-    CarouselItem(
-      title: '💻 Online ou Presencial',
-      subtitle: 'Escolha a modalidade que melhor se adapta à sua rotina',
-      color: Colors.purple.shade400,
-      icon: Icons.videocam,
-      onTap: () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Online ou presencial'), duration: Duration(seconds: 1)),
-        );
-      },
-    ),
-    CarouselItem(
-      title: '⭐ Professores Avaliados',
-      subtitle: 'Mais de 1000 professores disponíveis',
-      color: Colors.blue.shade400,
-      icon: Icons.star,
-      onTap: () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Professores avaliados'), duration: Duration(seconds: 1)),
-        );
-      },
-    ),
-  ];
-
-  return CustomCarousel(
-    items: carouselItems,
-    height: 140,
-    autoPlayInterval: const Duration(seconds: 3),
-  );
-}
-
-
-  Widget _buildProfessoresSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16),
-          child: Text('Professores em Destaque', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+  Widget _buildSolicitacoesPendentes(AgendamentoController controller) {
+    final pendentes = controller.solicitacoes
+        .where((s) => s.status == SolicitacaoStatus.pendente)
+        .toList();
+    
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.notifications_active, color: Colors.orange.shade700),
+                const SizedBox(width: 8),
+                const Text(
+                  'Solicitações Pendentes',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            if (pendentes.isEmpty)
+              const Padding(
+                padding: EdgeInsets.all(16),
+                child: Center(
+                  child: Text('Nenhuma solicitação pendente'),
+                ),
+              )
+            else
+              ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: pendentes.length > 3 ? 3 : pendentes.length,
+                separatorBuilder: (_, __) => const Divider(),
+                itemBuilder: (context, index) {
+                  final solicitacao = pendentes[index];
+                  return ListTile(
+                    leading: const CircleAvatar(
+                      child: Icon(Icons.person_add, size: 20),
+                    ),
+                    title: const Text('Nova solicitação de aula'),
+                    subtitle: Text(
+                      'Clique para ver detalhes',
+                    ),
+                    trailing: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.shade100,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        'Pendente',
+                        style: TextStyle(
+                          color: Colors.orange.shade700,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                    onTap: () {
+                      // TODO: Navegar para tela de detalhe da solicitação
+                    },
+                  );
+                },
+              ),
+            if (pendentes.length > 3)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: TextButton(
+                  onPressed: () {
+                    // TODO: Navegar para tela de todas solicitações
+                  },
+                  child: Text('Ver todas (${pendentes.length})'),
+                ),
+              ),
+          ],
         ),
-        const SizedBox(height: 12),
-        if (_isLoadingProfessores)
-          const Padding(padding: EdgeInsets.all(32), child: Center(child: CircularProgressIndicator()))
-        else if (_professores.isEmpty)
-          const Padding(padding: EdgeInsets.all(32), child: Center(child: Text('Nenhum professor cadastrado')))
-        else
-          ListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            itemCount: _professores.length > 3 ? 3 : _professores.length,
-            itemBuilder: (context, index) {
-              final professor = _professores[index];
-              final isFavorito = _favoritos.contains(professor.id);
-              return ProfessorCard(
-                professor: professor,
-                isFavorito: isFavorito,
-                onTap: () => _showDetalhesProfessor(professor),
-                onFavoritoTap: widget.usuario.tipo == TipoUsuario.aluno ? () => _toggleFavorito(professor) : null,
-              );
-            },
-          ),
-      ],
-    );
-  }
-
-  void _showProfessoresPorDisciplina(Disciplina disciplina) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Mostrar professores de ${disciplina.nome}'), duration: const Duration(seconds: 2)),
-    );
-  }
-
-  void _showDetalhesProfessor(Professor professor) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Detalhes de ${professor.nome}'), duration: const Duration(seconds: 2)),
+      ),
     );
   }
 }

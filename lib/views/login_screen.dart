@@ -1,8 +1,12 @@
-// lib/screens/login_screen.dart
 import 'package:flutter/material.dart';
-import '../database/db_helper.dart';
+import 'package:provider/provider.dart';
+import 'package:reforcoescolar/main.dart';
+import '../controllers/auth_controller.dart';
+import '../controllers/aluno_controller.dart';
+import '../controllers/professor_controller.dart';
 import '../models/usuario.dart';
-import '../main.dart'; // Importar o MainScreen
+import 'home_screen.dart';
+import 'cadastro_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -12,10 +16,8 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _senhaController = TextEditingController();
-  bool _isLoading = false;
   bool _obscurePassword = true;
 
   @override
@@ -25,182 +27,142 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  Future<void> _login() async {
-    if (!_formKey.currentState!.validate()) return;
-
-    setState(() => _isLoading = true);
-
-    try {
-      final usuario = await DBHelper.login(
-        _emailController.text.trim(),
-        _senhaController.text,
-      );
-
-      if (usuario != null && mounted) {
-        // Navegar para MainScreen que já tem o bottom nav bar
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => MainScreen(usuario: usuario),
-          ),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Email ou senha incorretos!'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Erro ao fazer login: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-
-    setState(() => _isLoading = false);
-  }
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.blue.shade700, Colors.blue.shade300],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: Card(
-              elevation: 8,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(32),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.school,
-                        size: 80,
-                        color: Colors.blue.shade700,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Reforço Escolar',
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.blue.shade700,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Faça login para continuar',
-                        style: TextStyle(color: Colors.grey),
-                      ),
-                      const SizedBox(height: 32),
-                      
-                      // Email
-                      TextFormField(
-                        controller: _emailController,
-                        keyboardType: TextInputType.emailAddress,
-                        decoration: const InputDecoration(
-                          labelText: 'Email',
-                          prefixIcon: Icon(Icons.email),
-                          border: OutlineInputBorder(),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Informe seu email';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      
-                      // Senha
-                      TextFormField(
-                        controller: _senhaController,
-                        obscureText: _obscurePassword,
-                        decoration: InputDecoration(
-                          labelText: 'Senha',
-                          prefixIcon: const Icon(Icons.lock),
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                            ),
-                            onPressed: () {
-                              setState(() {
-                                _obscurePassword = !_obscurePassword;
-                              });
-                            },
-                          ),
-                          border: const OutlineInputBorder(),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Informe sua senha';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 24),
-                      
-                      // Botão Login
-                      SizedBox(
-                        width: double.infinity,
-                        height: 50,
-                        child: ElevatedButton(
-                          onPressed: _isLoading ? null : _login,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue.shade700,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          child: _isLoading
-                              ? const CircularProgressIndicator(color: Colors.white)
-                              : const Text('Entrar', style: TextStyle(fontSize: 16)),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      
-                      // Credenciais de teste
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade100,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Column(
-                          children: [
-                            const Text(
-                              'Credenciais de teste:',
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            const SizedBox(height: 8),
-                            Text('Admin: admin@reforco.com / admin123'),
-                            Text('Aluno: aluno@teste.com / aluno123'),
-                          ],
-                        ),
-                      ),
-                    ],
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthController()),
+        ChangeNotifierProvider(create: (_) => AlunoController()),
+        ChangeNotifierProvider(create: (_) => ProfessorController()),
+      ],
+      child: Scaffold(
+        body: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Consumer<AuthController>(
+            builder: (context, authController, child) {
+              if (authController.isLoading) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              
+              return Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.school,
+                    size: 80,
+                    color: Colors.blue,
                   ),
-                ),
-              ),
-            ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Reforço Escolar',
+                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 50),
+                  
+                  // Mensagem de erro
+                  if (authController.erro != null)
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade100,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        authController.erro!,
+                        style: TextStyle(color: Colors.red.shade900),
+                      ),
+                    ),
+                  
+                  // Campo Email
+                  TextField(
+                    controller: _emailController,
+                    decoration: const InputDecoration(
+                      labelText: 'Email',
+                      prefixIcon: Icon(Icons.email),
+                      border: OutlineInputBorder(),
+                    ),
+                    keyboardType: TextInputType.emailAddress,
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  // Campo Senha
+                  TextField(
+                    controller: _senhaController,
+                    obscureText: _obscurePassword,
+                    decoration: InputDecoration(
+                      labelText: 'Senha',
+                      prefixIcon: const Icon(Icons.lock),
+                      border: const OutlineInputBorder(),
+                      suffixIcon: IconButton(
+                        icon: Icon(_obscurePassword 
+                            ? Icons.visibility_off 
+                            : Icons.visibility),
+                        onPressed: () {
+                          setState(() {
+                            _obscurePassword = !_obscurePassword;
+                          });
+                        },
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  
+                  // Botão Entrar
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        final success = await authController.login(
+                          _emailController.text.trim(),
+                          _senhaController.text,
+                        );
+                        
+                        if (success && mounted) {
+                          // Carregar dados adicionais baseado no tipo
+                          final usuario = authController.usuarioLogado;
+                          if (usuario != null) {
+                            if (usuario.tipo == TipoUsuario.aluno) {
+                              final alunoController = context.read<AlunoController>();
+                              await alunoController.carregarPerfilAluno(usuario.id);
+                            } else if (usuario.tipo == TipoUsuario.professor) {
+                              final professorController = context.read<ProfessorController>();
+                              await professorController.carregarPerfilProfessor(usuario.id);
+                            }
+                          }
+                          
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => MainScreen(usuario: usuario!),
+                            ),
+                          );
+                        }
+                      },
+                      child: const Text(
+                        'Entrar',
+                        style: TextStyle(fontSize: 18),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  // Link para cadastro
+                  TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const CadastroScreen(),
+                        ),
+                      );
+                    },
+                    child: const Text('Não tem conta? Cadastre-se'),
+                  ),
+                ],
+              );
+            },
           ),
         ),
       ),
