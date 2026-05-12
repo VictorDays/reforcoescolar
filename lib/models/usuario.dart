@@ -1,37 +1,47 @@
-enum TipoUsuario { aluno, admin }
+enum TipoUsuario {
+  aluno,
+  professor,
+  admin,
+}
 
 class Usuario {
-  final int? id;
-  final String nome;
+  final String id;
   final String email;
-  final String senha;
+  final String nome;
+  final String? fotoUrl;
   final TipoUsuario tipo;
-  final bool isLoggedIn;
+  final DateTime createdAt;
+  final DateTime? updatedAt;
 
   Usuario({
-    this.id,
-    required this.nome,
+    required this.id,
     required this.email,
-    required this.senha,
+    required this.nome,
+    this.fotoUrl,
     required this.tipo,
-    this.isLoggedIn = false,
+    required this.createdAt,
+    this.updatedAt,
   });
 
-  Map<String, dynamic> toMap() => {
+  Map<String, dynamic> toJson() => {
     'id': id,
-    'nome': nome,
     'email': email,
-    'senha': senha,
-    'tipo': tipo == TipoUsuario.admin ? 'admin' : 'aluno',
-    'isLoggedIn': isLoggedIn ? 1 : 0,
+    'nome': nome,
+    'foto_url': fotoUrl,
+    'tipo': tipo.name,
+    'created_at': createdAt.toIso8601String(),
+    'updated_at': updatedAt?.toIso8601String(),
   };
 
-  factory Usuario.fromMap(Map<String, dynamic> map) => Usuario(
-    id: map['id'],
-    nome: map['nome'],
-    email: map['email'],
-    senha: map['senha'],
-    tipo: map['tipo'] == 'admin' ? TipoUsuario.admin : TipoUsuario.aluno,
-    isLoggedIn: map['isLoggedIn'] == 1,
+  factory Usuario.fromJson(Map<String, dynamic> json) => Usuario(
+    id: json['id'],
+    email: json['email'],
+    nome: json['nome'],
+    fotoUrl: json['foto_url'],
+    tipo: TipoUsuario.values.firstWhere((e) => e.name == json['tipo']),
+    createdAt: DateTime.parse(json['created_at']),
+    updatedAt: json['updated_at'] != null 
+        ? DateTime.parse(json['updated_at']) 
+        : null,
   );
 }
