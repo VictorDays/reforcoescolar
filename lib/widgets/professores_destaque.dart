@@ -1,6 +1,6 @@
 // lib/widgets/professores_destaque_widget.dart
 import 'package:flutter/material.dart';
-import '../modelos/professor.dart';
+import '../models/professor.dart';
 
 class ProfessoresDestaqueWidget extends StatefulWidget {
   final List<Professor> professores;

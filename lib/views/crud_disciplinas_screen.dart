@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../database/db_helper.dart';
-import '../modelos/disciplina.dart';
+import '../models/disciplina.dart';
 import '../widgets/disciplina_card.dart';
 import '../widgets/disciplina_form.dart';
 import '../widgets/custom_dialog.dart';

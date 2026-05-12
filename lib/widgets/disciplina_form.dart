@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../modelos/disciplina.dart';
+import '../models/disciplina.dart';
 
 class DisciplinaForm extends StatefulWidget {
   final Disciplina? disciplina;

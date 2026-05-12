@@ -1,9 +1,9 @@
 
 import 'package:flutter/material.dart';
-import 'package:reforcoescolar/telas/login_screen.dart';
+import 'package:reforcoescolar/views/login_screen.dart';
 import '../database/db_helper.dart';
-import '../modelos/usuario.dart';
-import '../modelos/professor.dart';
+import '../models/usuario.dart';
+import '../models/professor.dart';
 import '../widgets/professor_card.dart';
 
 class FavoritosScreen extends StatefulWidget {

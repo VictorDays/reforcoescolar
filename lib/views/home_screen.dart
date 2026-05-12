@@ -1,14 +1,14 @@
  
 import 'package:flutter/material.dart';
-import 'package:reforcoescolar/telas/login_screen.dart';
+import 'package:reforcoescolar/views/login_screen.dart';
 import '../widgets/disciplinas_section.dart';
 import '../widgets/custom_carousel.dart'; 
 import '../widgets/professores_destaque.dart';
 import '../widgets/professor_card.dart';
 import '../database/db_helper.dart';
-import '../modelos/disciplina.dart';
-import '../modelos/professor.dart';
-import '../modelos/usuario.dart';
+import '../models/disciplina.dart';
+import '../models/professor.dart';
+import '../models/usuario.dart';
 import '../main.dart';
 
 class HomeScreen extends StatefulWidget {

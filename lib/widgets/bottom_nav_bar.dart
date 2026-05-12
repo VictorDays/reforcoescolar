@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../modelos/usuario.dart';
+import '../models/usuario.dart';
 
 class BottomNavBar extends StatelessWidget {
   final int currentIndex;

@@ -1,7 +1,7 @@
 // lib/screens/login_screen.dart
 import 'package:flutter/material.dart';
 import '../database/db_helper.dart';
-import '../modelos/usuario.dart';
+import '../models/usuario.dart';
 import '../main.dart'; // Importar o MainScreen
 
 class LoginScreen extends StatefulWidget {

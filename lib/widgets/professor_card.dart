@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import '../modelos/professor.dart';
+import '../models/professor.dart';
 
 class ProfessorCard extends StatelessWidget {
   final Professor professor;

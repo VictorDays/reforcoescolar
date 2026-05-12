@@ -1,7 +1,7 @@
 
 import 'package:flutter/material.dart';
-import '../modelos/professor.dart';
-import '../modelos/disciplina.dart';
+import '../models/professor.dart';
+import '../models/disciplina.dart';
 import 'image_picker_widget.dart';
 
 class ProfessorForm extends StatefulWidget {

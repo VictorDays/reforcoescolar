@@ -1,16 +1,22 @@
-// lib/main.dart
+
 import 'dart:io';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-import 'telas/login_screen.dart';
-import 'telas/home_screen.dart';
-import 'telas/favoritos_screen.dart';
-import 'telas/explorar_screen.dart';
-import 'telas/anunciar_screen.dart';
-import 'modelos/usuario.dart';
+import 'views/login_screen.dart';
+import 'views/home_screen.dart';
+import 'views/favoritos_screen.dart';
+import 'views/explorar_screen.dart';
+import 'views/anunciar_screen.dart';
+import 'models/usuario.dart';
 import 'widgets/bottom_nav_bar.dart';
 
 void main() async {
+  await Supabase.initialize(
+  url: 'https://cmgyxcaiifiqysvlqums.supabase.co/rest/v1/',  
+  anonKey: 'sb_publishable_oZZi15FFGxxFpd9CxF2pjA_jqSiJ1ej',     
+);
+
   WidgetsFlutterBinding.ensureInitialized();
   
   if (Platform.isWindows || Platform.isLinux) {
@@ -108,3 +114,4 @@ class _MainScreenState extends State<MainScreen> {
     );
   }
 }
+
