@@ -1,163 +1,99 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
-import '../modelos/professor.dart';
 
 class ProfessorCard extends StatelessWidget {
-  final Professor professor;
+  final Map<String, dynamic> professorData;
   final VoidCallback? onTap;
-  final VoidCallback? onFavoritoTap;
-  final VoidCallback? onDelete;
-  final VoidCallback? onToggleAtivo;
-  final bool isFavorito;
+  final Widget? trailing;
 
   const ProfessorCard({
     super.key,
-    required this.professor,
+    required this.professorData,
     this.onTap,
-    this.onFavoritoTap,
-    this.onDelete,
-    this.onToggleAtivo,
-    this.isFavorito = false,
+    this.trailing,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Row(
-            children: [
-              // Avatar com foto
-              _buildAvatar(),
-              const SizedBox(width: 12),
-              
-              // Informações
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            professor.nome,
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              decoration: professor.ativo 
-                                  ? TextDecoration.none 
-                                  : TextDecoration.lineThrough,
-                              color: professor.ativo 
-                                  ? Colors.black87 
-                                  : Colors.grey,
-                            ),
-                          ),
-                        ),
-                        if (onToggleAtivo != null)
-                          Switch(
-                            value: professor.ativo,
-                            onChanged: (_) => onToggleAtivo!(),
-                            activeColor: Colors.green,
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      professor.disciplina,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey.shade600,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'R\$ ${professor.valor.toStringAsFixed(2)}/hora',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.green,
-                      ),
-                    ),
-                    if (professor.descricao.isNotEmpty) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        professor.descricao,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey.shade600,
-                        ),
-                      ),
-                    ],
-                  ],
+    final usuario = professorData['usuarios'] ?? {};
+    final nome = usuario['nome'] ?? 'Professor';
+    final materias = List<String>.from(professorData['materias'] ?? []);
+    final valorHora = professorData['valor_hora'];
+    final avaliacao = (professorData['avaliacao_media'] ?? 0.0).toDouble();
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 10, offset: const Offset(0, 3)),
+          ],
+        ),
+        child: Row(
+          children: [
+            CircleAvatar(
+              radius: 26,
+              backgroundColor: const Color(0xFF5C6BC0).withOpacity(0.15),
+              child: Text(
+                nome.isNotEmpty ? nome[0].toUpperCase() : 'P',
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF5C6BC0),
                 ),
               ),
-              
-              // Botão de favorito
-              if (onFavoritoTap != null)
-                IconButton(
-                  onPressed: onFavoritoTap,
-                  icon: Icon(
-                    isFavorito ? Icons.favorite : Icons.favorite_border,
-                    color: isFavorito ? Colors.red : Colors.grey,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(nome,
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                      maxLines: 1, overflow: TextOverflow.ellipsis),
+                  const SizedBox(height: 4),
+                  if (materias.isNotEmpty)
+                    Wrap(
+                      spacing: 4,
+                      runSpacing: 2,
+                      children: materias.take(3).map((m) => Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF5C6BC0).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(m,
+                            style: const TextStyle(fontSize: 11, color: Color(0xFF5C6BC0))),
+                      )).toList(),
+                    ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Icon(Icons.star_rounded, size: 14, color: Colors.amber.shade600),
+                      const SizedBox(width: 2),
+                      Text(avaliacao > 0 ? avaliacao.toStringAsFixed(1) : 'Novo',
+                          style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+                      if (valorHora != null) ...[
+                        const SizedBox(width: 8),
+                        Text('R\$ ${valorHora.toStringAsFixed(0)}/h',
+                            style: const TextStyle(
+                                fontSize: 12,
+                                color: Color(0xFF43A047),
+                                fontWeight: FontWeight.w600)),
+                      ],
+                    ],
                   ),
-                ),
-              
-              // Botão de deletar
-              if (onDelete != null)
-                IconButton(
-                  onPressed: onDelete,
-                  icon: const Icon(Icons.delete_outline, color: Colors.red),
-                  tooltip: 'Excluir',
-                ),
-            ],
-          ),
+                ],
+              ),
+            ),
+            trailing ??
+                (onTap != null
+                    ? Icon(Icons.chevron_right_rounded, color: Colors.grey.shade400)
+                    : const SizedBox.shrink()),
+          ],
         ),
-      ),
-    );
-  }
-
-  
-  Widget _buildAvatar() {
-    // Verifica se tem foto válida
-    final hasFoto = professor.foto != null && professor.foto!.isNotEmpty;
-    
-    if (hasFoto) {
-      // Tenta carregar a foto
-      try {
-        final file = File(professor.foto!);
-        if (file.existsSync()) {
-          return CircleAvatar(
-            radius: 30,
-            backgroundImage: FileImage(file),
-            onBackgroundImageError: (_, __) {
-              // Se erro ao carregar, mostra fallback
-            },
-          );
-        }
-      } catch (e) {
-        // Se erro, mostra fallback
-      }
-    }
-    // Fallback: mostra ícone
-    return CircleAvatar(
-      radius: 30,
-      backgroundColor: professor.ativo 
-          ? Colors.blue.shade100 
-          : Colors.grey.shade200,
-      child: Icon(
-        Icons.person, 
-        size: 30, 
-        color: professor.ativo ? Colors.blue : Colors.grey,
       ),
     );
   }

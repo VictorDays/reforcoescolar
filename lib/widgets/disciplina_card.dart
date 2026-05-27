@@ -1,6 +1,6 @@
 
 import 'package:flutter/material.dart';
-import '../modelos/disciplina.dart';
+import '../models/disciplina.dart';
 
 class DisciplinaCard extends StatelessWidget {
   final Disciplina disciplina;
