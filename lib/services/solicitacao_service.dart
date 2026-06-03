@@ -32,6 +32,18 @@ class SolicitacaoService {
     return Solicitacao.fromJson(response);
   }
 
+  Future<void> atualizarDetalhes(String id, Map<String, dynamic> dados) async {
+    final result = await _supabase
+        .from('solicitacoes')
+        .update(dados)
+        .eq('id', id)
+        .select();
+
+    if (result.isEmpty) {
+      throw Exception('Nenhuma linha atualizada.');
+    }
+  }
+
   Future<void> atualizarStatus(String id, String status,
       {Map<String, dynamic>? extra}) async {
     final dados = <String, dynamic>{'status': status};

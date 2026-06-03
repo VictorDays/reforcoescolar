@@ -8,6 +8,9 @@ import '../controllers/admin_controller.dart';
 import '../models/novidade.dart';
 import '../widgets/professor_card.dart';
 import 'aluno/professor_detalhe_screen.dart';
+import 'aluno/notificacoes_screen.dart';
+import '../controllers/solicitacao_controller.dart';
+import '../controllers/aluno_controller.dart';
 
 class DashboardScreen extends StatefulWidget {
   final Usuario usuario;
@@ -23,10 +26,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<NovidadeController>().carregarAtivas();
-      context.read<ProfessorController>().carregarProfessores();
-      context.read<AdminController>().carregarDisciplinas();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final novidadeCtrl = context.read<NovidadeController>();
+      final profCtrl = context.read<ProfessorController>();
+      final adminCtrl = context.read<AdminController>();
+      novidadeCtrl.carregarAtivas();
+      profCtrl.carregarProfessores();
+      adminCtrl.carregarDisciplinas();
+
+      if (widget.usuario.isAluno) {
+        final alunoCtrl = context.read<AlunoController>();
+        final solCtrl = context.read<SolicitacaoController>();
+        await alunoCtrl.carregarPerfil(widget.usuario.id);
+        final alunoId = alunoCtrl.alunoAtual?['id'];
+        if (alunoId != null) solCtrl.carregarDoAluno(alunoId);
+      }
     });
   }
 
@@ -76,7 +90,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     children: [
                       CircleAvatar(
                         radius: 24,
-                        backgroundColor: Colors.white.withOpacity(0.2),
+                        backgroundColor: Colors.white.withValues(alpha: 0.2),
                         child: Text(
                           widget.usuario.nome.isNotEmpty
                               ? widget.usuario.nome[0].toUpperCase()
@@ -104,17 +118,59 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             Text(
                               widget.usuario.tipoLabel,
                               style: TextStyle(
-                                color: Colors.white.withOpacity(0.8),
+                                color: Colors.white.withValues(alpha: 0.8),
                                 fontSize: 13,
                               ),
                             ),
                           ],
                         ),
                       ),
-                      IconButton(
-                        icon: const Icon(Icons.notifications_rounded, color: Colors.white),
-                        onPressed: () {},
-                      ),
+                      if (widget.usuario.isAluno)
+                        Consumer<SolicitacaoController>(
+                          builder: (ctx, solCtrl, _) {
+                            final count = solCtrl.solicitacoes
+                                .where((s) => s.isAprovada)
+                                .length;
+                            return Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                IconButton(
+                                  icon: const Icon(Icons.notifications_rounded,
+                                      color: Colors.white),
+                                  onPressed: () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => NotificacoesScreen(
+                                          usuario: widget.usuario),
+                                    ),
+                                  ),
+                                ),
+                                if (count > 0)
+                                  Positioned(
+                                    top: 6,
+                                    right: 6,
+                                    child: Container(
+                                      width: 16,
+                                      height: 16,
+                                      decoration: const BoxDecoration(
+                                        color: Color(0xFFE53935),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: Center(
+                                        child: Text(
+                                          count > 9 ? '9+' : '$count',
+                                          style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 9,
+                                              fontWeight: FontWeight.bold),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            );
+                          },
+                        ),
                     ],
                   ),
                 ],
@@ -123,7 +179,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
         ),
       ),
-      title: const Text('Início', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+      
     );
   }
 
@@ -228,13 +284,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
       margin: const EdgeInsets.symmetric(horizontal: 6),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [n.cor, n.cor.withOpacity(0.75)],
+          colors: [n.cor, n.cor.withValues(alpha: 0.75)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
-          BoxShadow(color: n.cor.withOpacity(0.4), blurRadius: 12, offset: const Offset(0, 6)),
+          BoxShadow(color: n.cor.withValues(alpha: 0.4), blurRadius: 12, offset: const Offset(0, 6)),
         ],
       ),
       child: Padding(
@@ -251,7 +307,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       maxLines: 2, overflow: TextOverflow.ellipsis),
                   const SizedBox(height: 6),
                   Text(n.descricao,
-                      style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 13),
+                      style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 13),
                       maxLines: 2, overflow: TextOverflow.ellipsis),
                 ],
               ),
@@ -259,7 +315,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Container(
               width: 48, height: 48,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
+                color: Colors.white.withValues(alpha: 0.2),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.campaign_rounded, color: Colors.white, size: 26),
@@ -369,9 +425,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
         width: 82,
         margin: const EdgeInsets.symmetric(horizontal: 5),
         decoration: BoxDecoration(
-          color: cor.withOpacity(0.1),
+          color: cor.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: cor.withOpacity(0.3)),
+          border: Border.all(color: cor.withValues(alpha: 0.3)),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

@@ -119,11 +119,19 @@ class _SolicitacoesScreenState extends State<SolicitacoesScreen>
             ? const Color(0xFFE53935)
             : const Color(0xFFFF8F00);
 
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 10)],
+        onTap: s.isAprovada ? () => _abrirDialogEdicaoAula(s) : null,
+        child: Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 10)],
+        border: s.isAprovada
+            ? Border.all(color: const Color(0xFF43A047).withValues(alpha: 0.3))
+            : null,
       ),
       child: Column(
         children: [
@@ -133,7 +141,7 @@ class _SolicitacoesScreenState extends State<SolicitacoesScreen>
               children: [
                 CircleAvatar(
                   radius: 22,
-                  backgroundColor: const Color(0xFF5C6BC0).withOpacity(0.1),
+                  backgroundColor: const Color(0xFF5C6BC0).withValues(alpha: 0.1),
                   child: Text(
                     s.nomeAluno.isNotEmpty ? s.nomeAluno[0].toUpperCase() : 'A',
                     style: const TextStyle(
@@ -165,7 +173,7 @@ class _SolicitacoesScreenState extends State<SolicitacoesScreen>
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: statusColor.withOpacity(0.1),
+                    color: statusColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
@@ -249,15 +257,197 @@ class _SolicitacoesScreenState extends State<SolicitacoesScreen>
               ]),
             ),
           ],
+          if (s.isAprovada) ...[
+            const Divider(height: 1),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(children: [
+                const Icon(Icons.edit_rounded, size: 15, color: Color(0xFF5C6BC0)),
+                const SizedBox(width: 6),
+                Text('Toque para editar link/horário',
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade500)),
+              ]),
+            ),
+          ],
         ] else
           const SizedBox(height: 8),
-      ],
+        ],
+      ),
+      ),
+    ),
+  );
+}
+
+void _abrirDialogEdicaoAula(Solicitacao s) {
+  final linkCtrl = TextEditingController(text: s.linkAula ?? '');
+  final msgCtrl = TextEditingController(text: s.respostaProfessor ?? '');
+  DateTime? dataSelecionada = s.dataConfirmada;
+  TimeOfDay? horaSelecionada = s.dataConfirmada != null
+      ? TimeOfDay(hour: s.dataConfirmada!.hour, minute: s.dataConfirmada!.minute)
+      : null;
+
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+    builder: (ctx) => StatefulBuilder(
+      builder: (ctx, setSheet) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
+          left: 24, right: 24, top: 24,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(children: [
+              const Icon(Icons.edit_calendar_rounded, color: Color(0xFF5C6BC0)),
+              const SizedBox(width: 8),
+              const Text('Editar Aula Aprovada',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const Spacer(),
+              IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(ctx)),
+            ]),
+            const SizedBox(height: 4),
+            Text('${s.nomeAluno} · ${s.disciplina ?? "Aula"}',
+                style: TextStyle(color: Colors.grey.shade500, fontSize: 13)),
+            if (s.emailAluno.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: Row(children: [
+                  const Icon(Icons.email_rounded, size: 13, color: Color(0xFF5C6BC0)),
+                  const SizedBox(width: 4),
+                  Text(s.emailAluno,
+                      style: const TextStyle(fontSize: 12, color: Color(0xFF5C6BC0))),
+                ]),
+              ),
+            const SizedBox(height: 20),
+
+            const Text('Data e horário', style: TextStyle(fontWeight: FontWeight.w600)),
+            const SizedBox(height: 8),
+            Row(children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  icon: const Icon(Icons.calendar_today_rounded, size: 18),
+                  label: Text(dataSelecionada == null
+                      ? 'Selecionar data'
+                      : '${dataSelecionada!.day.toString().padLeft(2,'0')}/${dataSelecionada!.month.toString().padLeft(2,'0')}/${dataSelecionada!.year}'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: const Color(0xFF5C6BC0),
+                    side: const BorderSide(color: Color(0xFF5C6BC0)),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  onPressed: () async {
+                    final d = await showDatePicker(
+                      context: ctx,
+                      initialDate: dataSelecionada ?? DateTime.now().add(const Duration(days: 1)),
+                      firstDate: DateTime.now().subtract(const Duration(days: 30)),
+                      lastDate: DateTime.now().add(const Duration(days: 365)),
+                    );
+                    if (d != null) setSheet(() => dataSelecionada = d);
+                  },
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: OutlinedButton.icon(
+                  icon: const Icon(Icons.access_time_rounded, size: 18),
+                  label: Text(horaSelecionada == null
+                      ? 'Selecionar hora'
+                      : horaSelecionada!.format(ctx)),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: const Color(0xFF5C6BC0),
+                    side: const BorderSide(color: Color(0xFF5C6BC0)),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  onPressed: () async {
+                    final h = await showTimePicker(
+                      context: ctx,
+                      initialTime: horaSelecionada ?? const TimeOfDay(hour: 10, minute: 0),
+                    );
+                    if (h != null) setSheet(() => horaSelecionada = h);
+                  },
+                ),
+              ),
+            ]),
+            const SizedBox(height: 16),
+
+            const Text('Link da aula online',
+                style: TextStyle(fontWeight: FontWeight.w600)),
+            const SizedBox(height: 8),
+            TextField(
+              controller: linkCtrl,
+              decoration: InputDecoration(
+                hintText: 'https://meet.google.com/...',
+                prefixIcon: const Icon(Icons.videocam_rounded, color: Color(0xFF5C6BC0), size: 20),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            const Text('Mensagem para o aluno (opcional)',
+                style: TextStyle(fontWeight: FontWeight.w600)),
+            const SizedBox(height: 8),
+            TextField(
+              controller: msgCtrl,
+              maxLines: 3,
+              decoration: InputDecoration(
+                hintText: 'Ex: Nos encontramos na sala 3, traga o material...',
+                prefixIcon: const Icon(Icons.message_rounded, color: Color(0xFF5C6BC0), size: 20),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                contentPadding: const EdgeInsets.all(12),
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF5C6BC0),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                ),
+                icon: const Icon(Icons.save_rounded),
+                label: const Text('Salvar Alterações',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                onPressed: () async {
+                  Navigator.pop(ctx);
+                  DateTime? dataConfirmada;
+                  if (dataSelecionada != null) {
+                    final h = horaSelecionada ?? const TimeOfDay(hour: 10, minute: 0);
+                    dataConfirmada = DateTime(dataSelecionada!.year, dataSelecionada!.month,
+                        dataSelecionada!.day, h.hour, h.minute);
+                  }
+                  final ctrl = context.read<SolicitacaoController>();
+                  final messenger = ScaffoldMessenger.of(context);
+                  final ok = await ctrl.atualizarDetalhesAula(s.id,
+                      dataConfirmada: dataConfirmada,
+                      linkAula: linkCtrl.text.trim().isEmpty ? null : linkCtrl.text.trim(),
+                      respostaProfessor: msgCtrl.text.trim().isEmpty ? null : msgCtrl.text.trim());
+                  if (!mounted) return;
+                  messenger.showSnackBar(SnackBar(
+                    content: Text(ok ? 'Aula atualizada!' : (ctrl.erro ?? 'Erro ao salvar')),
+                    backgroundColor: ok ? const Color(0xFF43A047) : Colors.red,
+                  ));
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
     ),
   );
 }
 
 void _abrirDialogAprovacao(Solicitacao s) {
   final linkCtrl = TextEditingController();
+  final msgCtrl = TextEditingController();
   DateTime? dataSelecionada;
   TimeOfDay? horaSelecionada;
 
@@ -287,6 +477,16 @@ void _abrirDialogAprovacao(Solicitacao s) {
             const SizedBox(height: 4),
             Text('${s.nomeAluno} · ${s.disciplina ?? "Aula"}',
                 style: TextStyle(color: Colors.grey.shade500, fontSize: 13)),
+            if (s.emailAluno.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: Row(children: [
+                  const Icon(Icons.email_rounded, size: 13, color: Color(0xFF5C6BC0)),
+                  const SizedBox(width: 4),
+                  Text(s.emailAluno,
+                      style: const TextStyle(fontSize: 12, color: Color(0xFF5C6BC0))),
+                ]),
+              ),
             const SizedBox(height: 20),
 
             const Text('Data da aula', style: TextStyle(fontWeight: FontWeight.w600)),
@@ -352,6 +552,21 @@ void _abrirDialogAprovacao(Solicitacao s) {
                 contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               ),
             ),
+            const SizedBox(height: 16),
+
+            const Text('Mensagem para o aluno (opcional)',
+                style: TextStyle(fontWeight: FontWeight.w600)),
+            const SizedBox(height: 8),
+            TextField(
+              controller: msgCtrl,
+              maxLines: 3,
+              decoration: InputDecoration(
+                hintText: 'Ex: Nos encontramos na sala 3, traga o material...',
+                prefixIcon: const Icon(Icons.message_rounded, color: Color(0xFF5C6BC0), size: 20),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                contentPadding: const EdgeInsets.all(12),
+              ),
+            ),
             const SizedBox(height: 20),
 
             SizedBox(
@@ -378,7 +593,8 @@ void _abrirDialogAprovacao(Solicitacao s) {
                   final messenger = ScaffoldMessenger.of(context);
                   final ok = await ctrl.aprovar(s.id,
                       dataConfirmada: dataConfirmada,
-                      linkAula: linkCtrl.text.trim().isEmpty ? null : linkCtrl.text.trim());
+                      linkAula: linkCtrl.text.trim().isEmpty ? null : linkCtrl.text.trim(),
+                      respostaProfessor: msgCtrl.text.trim().isEmpty ? null : msgCtrl.text.trim());
                   if (!mounted) return;
                   if (ok) {
                     _tabCtrl.animateTo(1);

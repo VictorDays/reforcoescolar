@@ -61,11 +61,45 @@ class SolicitacaoController extends ChangeNotifier {
     }
   }
 
+  Future<bool> atualizarDetalhesAula(String id,
+      {DateTime? dataConfirmada, String? linkAula, String? respostaProfessor}) async {
+    try {
+      final dados = <String, dynamic>{};
+      if (dataConfirmada != null) dados['data_confirmada'] = dataConfirmada.toIso8601String();
+      dados['link_aula'] = linkAula?.isNotEmpty == true ? linkAula : null;
+      if (respostaProfessor != null) dados['resposta_professor'] = respostaProfessor.isNotEmpty ? respostaProfessor : null;
+
+      await _service.atualizarDetalhes(id, dados);
+
+      final idx = _solicitacoes.indexWhere((s) => s.id == id);
+      if (idx != -1) {
+        final old = _solicitacoes[idx];
+        _solicitacoes[idx] = Solicitacao(
+          id: old.id, alunoId: old.alunoId, professorId: old.professorId,
+          status: old.status, mensagem: old.mensagem, disciplina: old.disciplina,
+          horarioSolicitado: old.horarioSolicitado,
+          dataConfirmada: dataConfirmada ?? old.dataConfirmada,
+          linkAula: linkAula?.isNotEmpty == true ? linkAula : null,
+          contatoAluno: old.contatoAluno,
+          respostaProfessor: respostaProfessor?.isNotEmpty == true ? respostaProfessor : null,
+          createdAt: old.createdAt, alunoData: old.alunoData, professorData: old.professorData,
+        );
+        notifyListeners();
+      }
+      return true;
+    } catch (e) {
+      _erro = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
   Future<bool> aprovar(String id,
-      {DateTime? dataConfirmada, String? linkAula}) async {
+      {DateTime? dataConfirmada, String? linkAula, String? respostaProfessor}) async {
     final extra = <String, dynamic>{};
     if (dataConfirmada != null) extra['data_confirmada'] = dataConfirmada.toIso8601String();
     if (linkAula != null && linkAula.isNotEmpty) extra['link_aula'] = linkAula;
+    if (respostaProfessor != null && respostaProfessor.isNotEmpty) extra['resposta_professor'] = respostaProfessor;
     return _atualizarStatus(id, 'aprovada', extra: extra.isEmpty ? null : extra);
   }
 
@@ -79,21 +113,15 @@ class SolicitacaoController extends ChangeNotifier {
       if (idx != -1) {
         final old = _solicitacoes[idx];
         _solicitacoes[idx] = Solicitacao(
-          id: old.id,
-          alunoId: old.alunoId,
-          professorId: old.professorId,
-          status: status,
-          mensagem: old.mensagem,
-          disciplina: old.disciplina,
+          id: old.id, alunoId: old.alunoId, professorId: old.professorId,
+          status: status, mensagem: old.mensagem, disciplina: old.disciplina,
           horarioSolicitado: old.horarioSolicitado,
           dataConfirmada: extra != null && extra['data_confirmada'] != null
-              ? DateTime.parse(extra['data_confirmada'])
-              : old.dataConfirmada,
+              ? DateTime.parse(extra['data_confirmada']) : old.dataConfirmada,
           linkAula: extra?['link_aula'] ?? old.linkAula,
           contatoAluno: old.contatoAluno,
-          createdAt: old.createdAt,
-          alunoData: old.alunoData,
-          professorData: old.professorData,
+          respostaProfessor: extra?['resposta_professor'] ?? old.respostaProfessor,
+          createdAt: old.createdAt, alunoData: old.alunoData, professorData: old.professorData,
         );
         notifyListeners();
       }

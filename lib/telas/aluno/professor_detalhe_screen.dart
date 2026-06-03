@@ -353,6 +353,9 @@ class _ProfessorDetalheScreenState extends State<ProfessorDetalheScreen> {
                       mensagem: msgCtrl.text.trim().isEmpty ? null : msgCtrl.text.trim(),
                       disciplina: disciplinaSelecionada,
                     );
+                    if (ok && _alunoId != null) {
+                      await solCtrl.carregarDoAluno(_alunoId!);
+                    }
                     setState(() => _enviandoSolicitacao = false);
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(SnackBar(

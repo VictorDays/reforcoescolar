@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../models/usuario.dart';
 import '../../models/solicitacao.dart';
 import '../../controllers/solicitacao_controller.dart';
@@ -240,92 +239,90 @@ class _MinhasAulasScreenState extends State<MinhasAulasScreen>
       context: context,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-      builder: (ctx) => Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF43A047).withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(Icons.event_available_rounded,
-                    color: Color(0xFF43A047), size: 28),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  const Text('Aula Confirmada',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  Text(nomeProf,
-                      style: TextStyle(color: Colors.grey.shade500, fontSize: 13)),
-                ]),
-              ),
-              IconButton(
-                  icon: const Icon(Icons.close), onPressed: () => Navigator.pop(ctx)),
-            ]),
-            const SizedBox(height: 20),
-
-            if (s.disciplina != null) ...[
-              _detalheRow(Icons.book_rounded, 'Disciplina', s.disciplina!,
-                  const Color(0xFF5C6BC0)),
-              const SizedBox(height: 12),
-            ],
-
-            if (data != null) ...[
-              _detalheRow(
-                Icons.calendar_today_rounded,
-                'Data e Horário',
-                '${data.day.toString().padLeft(2,'0')}/${data.month.toString().padLeft(2,'0')}/${data.year}  •  ${data.hour.toString().padLeft(2,'0')}:${data.minute.toString().padLeft(2,'0')}',
-                const Color(0xFFFF8F00),
-              ),
-              const SizedBox(height: 12),
-            ] else ...[
-              _detalheRow(Icons.calendar_today_rounded, 'Data e Horário',
-                  'A combinar com o professor', Colors.grey),
-              const SizedBox(height: 12),
-            ],
-
-            if (link != null && link.isNotEmpty) ...[
-              _detalheRow(Icons.videocam_rounded, 'Link da Aula', link,
-                  const Color(0xFF5C6BC0)),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: () async {
-                    final uri = Uri.tryParse(link);
-                    if (uri != null && await canLaunchUrl(uri)) {
-                      await launchUrl(uri, mode: LaunchMode.externalApplication);
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF5C6BC0),
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
+      isScrollControlled: true,
+      builder: (ctx) => DraggableScrollableSheet(
+        initialChildSize: 0.6,
+        minChildSize: 0.4,
+        maxChildSize: 0.9,
+        expand: false,
+        builder: (ctx, scrollCtrl) => SingleChildScrollView(
+          controller: scrollCtrl,
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF43A047).withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  icon: const Icon(Icons.open_in_new_rounded, size: 18),
-                  label: const Text('Entrar na Aula Online',
-                      style: TextStyle(fontWeight: FontWeight.bold)),
+                  child: const Icon(Icons.event_available_rounded,
+                      color: Color(0xFF43A047), size: 28),
                 ),
-              ),
-            ] else ...[
-              _detalheRow(Icons.videocam_off_rounded, 'Modalidade',
-                  'Aula presencial', Colors.grey),
-            ],
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    const Text('Aula Confirmada',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    Text(nomeProf,
+                        style: TextStyle(color: Colors.grey.shade500, fontSize: 13)),
+                  ]),
+                ),
+                IconButton(
+                    icon: const Icon(Icons.close), onPressed: () => Navigator.pop(ctx)),
+              ]),
+              const SizedBox(height: 20),
 
-            if (s.mensagem != null && s.mensagem!.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              _detalheRow(Icons.message_rounded, 'Sua mensagem', s.mensagem!,
-                  Colors.grey),
+              if (s.disciplina != null) ...[
+                _detalheRow(Icons.book_rounded, 'Disciplina', s.disciplina!,
+                    const Color(0xFF5C6BC0)),
+                const SizedBox(height: 12),
+              ],
+
+              if (data != null) ...[
+                _detalheRow(
+                  Icons.calendar_today_rounded,
+                  'Data e Horário',
+                  '${data.day.toString().padLeft(2,'0')}/${data.month.toString().padLeft(2,'0')}/${data.year}  •  ${data.hour.toString().padLeft(2,'0')}:${data.minute.toString().padLeft(2,'0')}',
+                  const Color(0xFFFF8F00),
+                ),
+                const SizedBox(height: 12),
+              ] else ...[
+                _detalheRow(Icons.calendar_today_rounded, 'Data e Horário',
+                    'A combinar com o professor', Colors.grey),
+                const SizedBox(height: 12),
+              ],
+
+              if (link != null && link.isNotEmpty) ...[
+                _detalheRow(Icons.videocam_rounded, 'Link da Aula', link,
+                    const Color(0xFF5C6BC0)),
+                const SizedBox(height: 12),
+              ] else ...[
+                _detalheRow(Icons.videocam_off_rounded, 'Modalidade',
+                    'Aula presencial', Colors.grey),
+                const SizedBox(height: 12),
+              ],
+
+              if (s.respostaProfessor != null && s.respostaProfessor!.isNotEmpty) ...[
+                _detalheRow(Icons.chat_bubble_rounded, 'Mensagem do professor',
+                    s.respostaProfessor!, const Color(0xFF43A047)),
+                const SizedBox(height: 12),
+              ],
+              if (s.emailProfessor.isNotEmpty) ...[
+                _detalheRow(Icons.email_rounded, 'E-mail do professor',
+                    s.emailProfessor, const Color(0xFF5C6BC0)),
+                const SizedBox(height: 12),
+              ],
+              if (s.mensagem != null && s.mensagem!.isNotEmpty) ...[
+                _detalheRow(Icons.message_rounded, 'Sua mensagem', s.mensagem!,
+                    Colors.grey),
+                const SizedBox(height: 12),
+              ],
+              const SizedBox(height: 8),
             ],
-            const SizedBox(height: 8),
-          ],
+          ),
         ),
       ),
     );

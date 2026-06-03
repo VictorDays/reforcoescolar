@@ -40,7 +40,9 @@ class ProfessorController extends ChangeNotifier {
 
     try {
       _professorAtual = await _professorService.buscarPorUsuarioId(usuarioId);
-      _professorAtual ??= await _professorService.criar(usuarioId, materias: []);
+      if (_professorAtual == null) {
+        _professorAtual = await _professorService.criar(usuarioId, materias: []);
+      }
     } catch (e) {
       _erro = e.toString();
     } finally {

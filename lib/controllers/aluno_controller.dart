@@ -22,9 +22,12 @@ class AlunoController extends ChangeNotifier {
 
     try {
       _alunoAtual = await _alunoService.buscarPorUsuarioId(usuarioId);
-      _alunoAtual ??= await _alunoService.criar(usuarioId);
+      if (_alunoAtual == null) {
+        _alunoAtual = await _alunoService.criar(usuarioId);
+      }
     } catch (e) {
       _erro = e.toString();
+      // Não cria perfil quando a busca falhou com erro — evita duplicatas
     } finally {
       _isLoading = false;
       notifyListeners();

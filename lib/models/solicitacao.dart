@@ -9,6 +9,7 @@ class Solicitacao {
   final DateTime? dataConfirmada;
   final String? linkAula;
   final String? contatoAluno;
+  final String? respostaProfessor;
   final DateTime createdAt;
   final Map<String, dynamic>? alunoData;
   final Map<String, dynamic>? professorData;
@@ -24,6 +25,7 @@ class Solicitacao {
     this.dataConfirmada,
     this.linkAula,
     this.contatoAluno,
+    this.respostaProfessor,
     required this.createdAt,
     this.alunoData,
     this.professorData,
@@ -45,6 +47,12 @@ class Solicitacao {
     return u['email'] ?? '';
   }
 
+  String get emailProfessor {
+    if (professorData == null) return '';
+    final u = professorData!['usuarios'] as Map<String, dynamic>?;
+    return u?['email'] ?? '';
+  }
+
   factory Solicitacao.fromJson(Map<String, dynamic> json) {
     return Solicitacao(
       id: json['id'],
@@ -61,6 +69,7 @@ class Solicitacao {
           : null,
       linkAula: json['link_aula'],
       contatoAluno: json['contato_aluno'],
+      respostaProfessor: json['resposta_professor'],
       createdAt: DateTime.parse(json['created_at']),
       alunoData: json['alunos'] as Map<String, dynamic>?,
       professorData: json['professores'] as Map<String, dynamic>?,

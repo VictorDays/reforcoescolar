@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../models/usuario.dart';
+import '../controllers/aluno_controller.dart';
+import '../controllers/solicitacao_controller.dart';
 import '../widgets/bottom_nav_bar.dart';
 import 'dashboard_screen.dart';
 import 'admin_dashboard_screen.dart';
@@ -78,6 +81,13 @@ class _HomeScreenState extends State<HomeScreen> {
         onTap: (index) {
           if (index < _screens.length) {
             setState(() => _currentIndex = index);
+            if (index == 2 && widget.usuario.isAluno) {
+              final alunoId =
+                  context.read<AlunoController>().alunoAtual?['id'];
+              if (alunoId != null) {
+                context.read<SolicitacaoController>().carregarDoAluno(alunoId);
+              }
+            }
           }
         },
       ),

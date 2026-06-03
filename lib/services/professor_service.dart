@@ -6,18 +6,11 @@ class ProfessorService {
 
   /// Buscar perfil do professor por ID do usuário
   Future<Map<String, dynamic>?> buscarPorUsuarioId(String usuarioId) async {
-    try {
-      final response = await _supabase
-          .from('professores')
-          .select('*, usuarios(*)')
-          .eq('usuario_id', usuarioId)
-          .maybeSingle();
-
-      return response;
-    } catch (e) {
-      print('Erro ao buscar professor: $e');
-      return null;
-    }
+    return await _supabase
+        .from('professores')
+        .select('*, usuarios(*)')
+        .eq('usuario_id', usuarioId)
+        .maybeSingle();
   }
 
   /// Buscar professor por ID
